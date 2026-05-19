@@ -1,0 +1,86 @@
+
+
+Onboarding meet with Yoihenba Kongbam:
+
+Topics:
+	- Product alignment
+	- Product feedback
+	- Using AI
+	- Paying attention to how much time is being spent across:
+		- Get Work Done
+		- Learn
+		- Have Fun
+	- Not Taking validations from AI and critical thinking
+	- Don't ask "Will this solution work?" "Is this good enough for production"
+	- Instead ask. "In what cases can the solution fail?" "What are steps necessary to be taken for production deployment to deal with 10 concurrent users?"
+	- Documentation
+	- Focus on it to get feedback on how to communicate
+	- Better control over our language gives us better collaboration with humans and AI.
+	
+	
+Assignment 1:
+	- Product Feedback from the perspective of a user:
+	- Bug/Features
+	- Try out all the buttons
+	- Try organizing an event of your own.
+
+	Action Item
+	- List some improvements and bugs. Try to be detailed in the analysis
+
+	Goal
+	- Learn about the problems that are solved in Pinch by putting ourselves in the user's shoes.
+	- Suggest improvements by putting ourselves in Pinch
+
+	AI Use guideline:
+	- Avoid using for this case as feedback will be given for the improvements and bugs to help you understand the industry/problem space more.
+	
+	
+Assignment 2:
+	Reading list:
+	- Javascript Basics
+	- Javascript Event Loop: A core concept in how javascript schedules its execution.
+	https://www.youtube.com/watch?v=cCOL7MC4Pl0
+	- Git: Cool game, teaches git branching, helps understand intuitively https://learngitbranching.js.org/
+	- React Fundamentals: https://react.dev/learn
+	- Expo fundamentals: https://docs.expo.dev/
+
+	Action item
+	- Try deploying a small app on expo go.
+
+	Goal
+	- Understand how to deploy code to phone using expo
+	- Understand Basics of JS and Git
+	
+====================================================================================================================
+A1:
+- When creating a New event then in most of the cases we select an option and then move backward to continue and this is not proper means instead of back we should be having an OK button of select button at bottom or top right which gives user a sense that they have completed and using backward button always create a sense of doubt that are we selecting or reversing our change
+
+- When selecting an event and asking bot then bot is having good responses but it lacks follow-ups means unable to ask more question for that i have to back and then return back and when back then history of previous chat is cleared. So, bot need to have follow-ups for any number of time and also history must be saved for the conversation. And for any event, app must ask organizers about more details which are the basic questions of the BOT.
+
+- In dark theme, Invite in the Profile tab is not properly visible
+- In dark theme, Community page is also not proper means it's in light mode only, only small bg as black
+- connect to google health is not working
+- Allow users to select their own username when creating account and also let it editable (most platforms allows it)
+- Pages like terms-conditions, privacy-policy, contact, app-version needs to be updated as they are not proper, some lack content and also they are made for light mode only
+
+- Create event page for the dark mode need to have a little more different color means it's similar to light mode only
+- In discover allow multiple cities and via countries sort the top cities and add a search bar too, so that multiple cities visible and user can also search for the same
+- When joining a community a very abrubt UI distorsion for around 3-4 secs and then normal means it displayed the same joining msg like it's crashing and then normally stopped in 3-4 secs and normal
+
+- COUPONS are not applicable on the payment page
+- Berlin events are not opening means want to test and see but loading only
+
+====================================================================================================================
+	postgres
+	graphql
+	expo go
+	Make a Fun app
+Use expo go, postgres, graphql to build any app that they like.
+This is to make them familiar with the tech
+No AI for the code, which defeats the whole purpose of this activity
+To learn how to use AI effectively, We have to be clear about the fundamentals.
+
+
+
+
+

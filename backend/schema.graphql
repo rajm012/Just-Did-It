@@ -1,0 +1,61 @@
+
+type User {
+  id: ID!
+  username: String!
+  email: String!
+}
+
+input GenreInput {
+  genres: [String!]!
+}
+
+type Movie {
+  id: ID!
+  title: String!
+  genre: [String!]!
+  rating: Int
+  review: String
+  status: String!
+  is_favorite: Boolean!
+  created_at: String!
+}
+
+type Book {
+  id: ID!
+  title: String!
+  genre: [String!]!
+  rating: Int
+  review: String
+  status: String!
+  is_favorite: Boolean!
+  created_at: String!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type Query {
+  getMyMovies: [Movie]
+  getMyBooks: [Book]
+  getMoviesByStatus(status: String!): [Movie]
+  getBooksByStatus(status: String!): [Book]
+  searchMovies(term: String!): [Movie]
+  searchBooks(term: String!): [Book]
+  getFavoriteMovies: [Movie]
+  getFavoriteBooks: [Book]
+}
+
+type Mutation {
+  signup(username: String!, email: String!, password: String!): AuthPayload
+  login(email: String!, password: String!): AuthPayload
+  
+  addMovie(title: String!, genre: [String!]!, rating: Int, review: String, status: String!): Movie
+  updateMovie(id: ID!,  genre: [String!], rating: Int, review: String, status: String, is_favorite: Boolean): Movie
+  deleteMovie(id: ID!): Boolean
+  
+  addBook(title: String!, genre: [String!]!, rating: Int, review: String, status: String!): Book
+  updateBook(id: ID!,  genre: [String!], rating: Int, review: String, status: String, is_favorite: Boolean): Book
+  deleteBook(id: ID!): Boolean
+}
