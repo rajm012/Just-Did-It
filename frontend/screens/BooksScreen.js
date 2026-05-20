@@ -14,6 +14,13 @@ const GET_BOOKS = gql`
       review
       status
       is_favorite
+      year
+      pages
+      authors {
+        id
+        name
+        country
+      }
       created_at
     }
   }
@@ -71,11 +78,11 @@ export default function BooksScreen({ navigation }) {
   };
 
   const toggleFavorite = async (item) => {
-    await updateBookFavorite({
-      variables: {
-        id: item.id,
-        is_favorite: !item.is_favorite,
-      },
+    await updateBookFavorite({ 
+      variables: { 
+        id: item.id, 
+        is_favorite: !item.is_favorite 
+      } 
     });
     refetch();
   };
@@ -86,23 +93,40 @@ export default function BooksScreen({ navigation }) {
         <View style={styles.titleRow}>
           <Text style={styles.title}>{item.title}</Text>
           <TouchableOpacity onPress={() => toggleFavorite(item)}>
-            <Ionicons
-              name={item.is_favorite ? 'heart' : 'heart-outline'}
-              size={24}
-              color={item.is_favorite ? '#FFD700' : '#ccc'}
+            <Ionicons 
+              name={item.is_favorite ? "heart" : "heart-outline"} 
+              size={24} 
+              color={item.is_favorite ? "#FFD700" : "#ccc"} 
             />
           </TouchableOpacity>
         </View>
-        <Text>Genre: {formatGenre(item.genre)}</Text>
+        
+        <Text style={styles.genreText}>Genre: {formatGenre(item.genre)}</Text>
+        
+        {item.authors && item.authors.length > 0 && (
+          <Text style={styles.authorText}>
+            Author: {item.authors.map(a => a.name).join(', ')}
+          </Text>
+        )}
+        
+        {item.year && <Text>Year: {item.year}</Text>}
+        {item.pages && <Text>Pages: {item.pages}</Text>}
         <Text>Rating: {item.rating || 'N/A'}/10</Text>
         <Text>Status: {item.status?.replaceAll('_', ' ') || 'N/A'}</Text>
         <Text style={styles.viewHint}>Tap to view details</Text>
       </TouchableOpacity>
+      
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('AddEdit', { type: 'book', item })}>
+        <TouchableOpacity 
+          style={styles.editButton} 
+          onPress={() => navigation.navigate('AddEdit', { type: 'book', item })}
+        >
           <Text style={styles.buttonText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+        <TouchableOpacity 
+          style={styles.deleteButton} 
+          onPress={() => handleDelete(item.id)}
+        >
           <Text style={styles.buttonText}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -113,26 +137,53 @@ export default function BooksScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddEdit', { type: 'book' })}>
+      <TouchableOpacity 
+        style={styles.addButton} 
+        onPress={() => navigation.navigate('AddEdit', { type: 'book' })}
+      >
         <Text style={styles.addButtonText}>+ Add Book</Text>
       </TouchableOpacity>
-      <FlatList
-        data={data?.getMyBooks || []}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        onRefresh={refetch}
-        refreshing={loading}
+      
+      <FlatList 
+        data={data?.getMyBooks || []} 
+        renderItem={renderItem} 
+        keyExtractor={(item) => item.id.toString()} 
+        onRefresh={refetch} 
+        refreshing={loading} 
       />
 
       <Modal visible={!!selectedBook} animationType="slide" transparent onRequestClose={() => setSelectedBook(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedBook(null)}>
-              <Text style={styles.closeButtonText}>x</Text>
+              <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.modalContent}>
               <Text style={styles.modalTitle}>{selectedBook?.title}</Text>
               <Text style={styles.modalRow}>Genre: {formatGenre(selectedBook?.genre)}</Text>
+              
+              {selectedBook?.authors && selectedBook.authors.length > 0 && (
+                <>
+                  <Text style={styles.modalRow}>Author(s):</Text>
+                  {selectedBook.authors.map((author, index) => (
+                    <TouchableOpacity 
+                      key={author.id}
+                      style={styles.authorLink}
+                      onPress={() => {
+                        setSelectedBook(null);
+                        navigation.navigate('AuthorDetail', { authorId: author.id, authorName: author.name });
+                      }}
+                    >
+                      <Text style={styles.authorLinkText}>
+                        {author.name} {author.country ? `(${author.country})` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+              
+              {selectedBook?.year && <Text style={styles.modalRow}>Year: {selectedBook.year}</Text>}
+              {selectedBook?.pages && <Text style={styles.modalRow}>Pages: {selectedBook.pages}</Text>}
               <Text style={styles.modalRow}>Rating: {selectedBook?.rating || 'N/A'}/10</Text>
               <Text style={styles.modalRow}>Status: {selectedBook?.status?.replaceAll('_', ' ') || 'N/A'}</Text>
               <Text style={styles.modalRow}>Favorite: {selectedBook?.is_favorite ? 'Yes' : 'No'}</Text>
@@ -156,7 +207,9 @@ const styles = StyleSheet.create({
   addButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   card: { backgroundColor: '#fff', padding: 15, borderRadius: 8, marginBottom: 10, elevation: 2 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  title: { fontSize: 18, fontWeight: 'bold', flex: 1, marginRight: 10 },
+  genreText: { color: '#666', marginBottom: 3, fontSize: 14 },
+  authorText: { color: '#007AFF', marginBottom: 3, fontSize: 14 },
   viewHint: { marginTop: 8, color: '#666', fontSize: 12 },
   buttonRow: { flexDirection: 'row', marginTop: 10, gap: 10 },
   editButton: { backgroundColor: '#4CAF50', padding: 10, borderRadius: 6, flex: 1, alignItems: 'center' },
@@ -164,10 +217,12 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontWeight: 'bold' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' },
   modalCard: { width: '92%', height: '80%', backgroundColor: '#fff', borderRadius: 16, paddingTop: 46, paddingHorizontal: 18, paddingBottom: 18 },
-  closeButton: { position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f1f1', justifyContent: 'center', alignItems: 'center' },
+  closeButton: { position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f1f1', justifyContent: 'center', alignItems: 'center', zIndex: 1 },
   closeButtonText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   modalContent: { paddingBottom: 12 },
   modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 14 },
   modalRow: { fontSize: 16, marginBottom: 10, color: '#333' },
-  modalReview: { fontSize: 15, color: '#444', lineHeight: 22, marginBottom: 14 },
+  modalReview: { fontSize: 15, color: '#444', lineHeight: 22, marginBottom: 14, backgroundColor: '#f9f9f9', padding: 12, borderRadius: 8 },
+  authorLink: { marginBottom: 8, marginLeft: 10 },
+  authorLinkText: { color: '#007AFF', fontSize: 15, textDecorationLine: 'underline' },
 });

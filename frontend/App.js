@@ -13,11 +13,12 @@ import BooksScreen from './screens/BooksScreen';
 import AddEditScreen from './screens/AddEditScreen';
 import FavoritesScreen from './screens/FavoritesScreen';
 import GenreFilterScreen from './screens/GenreFilterScreen';
+import DirectorDetailScreen from './screens/DirectorDetailScreen';
+import AuthorDetailScreen from './screens/AuthorDetailScreen';
 import { Ionicons } from '@expo/vector-icons';
 
 
 const MYIP = '172.16.23.134';
-
 const httpLink = createHttpLink({
   uri: `http://${MYIP}:4000/graphql`,
 });
@@ -40,8 +41,6 @@ const client = new ApolloClient({
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-
-// export across the app for easy access
 export const GENRES = [
   'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy',
   'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller'
@@ -101,6 +100,8 @@ export default function App() {
           <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
           <Stack.Screen name="AddEdit" component={AddEditScreen} options={{ title: 'Add/Edit Item' }} />
+          <Stack.Screen name="DirectorDetail" component={DirectorDetailScreen} options={{ title: 'Director Details' }} />
+          <Stack.Screen name="AuthorDetail" component={AuthorDetailScreen} options={{ title: 'Author Details' }} />
         </Stack.Navigator>
       </NavigationContainer>
     </ApolloProvider>

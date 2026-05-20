@@ -5,32 +5,32 @@ import { useMutation } from '@apollo/client/react';
 import { GENRES } from '../App';
 
 const ADD_MOVIE = gql`
-  mutation AddMovie($title: String!, $genre: [String!]!, $rating: Int, $review: String, $status: String!) {
-    addMovie(title: $title, genre: $genre, rating: $rating, review: $review, status: $status) {
+  mutation AddMovie($title: String!, $genre: [String!]!, $rating: Int, $review: String, $status: String!, $year: Int, $runtime: Int, $directorNames: [String!]) {
+    addMovie(title: $title, genre: $genre, rating: $rating, review: $review, status: $status, year: $year, runtime: $runtime, directorNames: $directorNames) {
       id
     }
   }
 `;
 
 const UPDATE_MOVIE = gql`
-  mutation UpdateMovie($id: ID!, $genre: [String!], $rating: Int, $review: String, $status: String, $is_favorite: Boolean) {
-    updateMovie(id: $id, genre: $genre, rating: $rating, review: $review, status: $status, is_favorite: $is_favorite) {
+  mutation UpdateMovie($id: ID!, $genre: [String!], $rating: Int, $review: String, $status: String, $is_favorite: Boolean, $year: Int, $runtime: Int) {
+    updateMovie(id: $id, genre: $genre, rating: $rating, review: $review, status: $status, is_favorite: $is_favorite, year: $year, runtime: $runtime) {
       id
     }
   }
 `;
 
 const ADD_BOOK = gql`
-  mutation AddBook($title: String!, $genre: [String!]!, $rating: Int, $review: String, $status: String!) {
-    addBook(title: $title, genre: $genre, rating: $rating, review: $review, status: $status) {
+  mutation AddBook($title: String!, $genre: [String!]!, $rating: Int, $review: String, $status: String!, $year: Int, $pages: Int, $authorNames: [String!]) {
+    addBook(title: $title, genre: $genre, rating: $rating, review: $review, status: $status, year: $year, pages: $pages, authorNames: $authorNames) {
       id
     }
   }
 `;
 
 const UPDATE_BOOK = gql`
-  mutation UpdateBook($id: ID!, $genre: [String!], $rating: Int, $review: String, $status: String, $is_favorite: Boolean) {
-    updateBook(id: $id, genre: $genre, rating: $rating, review: $review, status: $status, is_favorite: $is_favorite) {
+  mutation UpdateBook($id: ID!, $genre: [String!], $rating: Int, $review: String, $status: String, $is_favorite: Boolean, $year: Int, $pages: Int) {
+    updateBook(id: $id, genre: $genre, rating: $rating, review: $review, status: $status, is_favorite: $is_favorite, year: $year, pages: $pages) {
       id
     }
   }
@@ -51,6 +51,17 @@ export default function AddEditScreen({ route, navigation }) {
   const [selectedGenres, setSelectedGenres] = useState(initialGenre);
   const [genreModalVisible, setGenreModalVisible] = useState(false);
 
+  const [directorNames, setDirectorNames] = useState(
+    item?.directors ? item.directors.map(d => d.name).join(', ') : ''
+  );
+  const [authorNames, setAuthorNames] = useState(
+    item?.authors ? item.authors.map(a => a.name).join(', ') : ''
+  );
+  
+  const [year, setYear] = useState(item?.year?.toString() || '');
+  const [runtime, setRuntime] = useState(item?.runtime?.toString() || '');
+  const [pages, setPages] = useState(item?.pages?.toString() || '');
+  
   const [rating, setRating] = useState(item?.rating?.toString() || '');
   const [review, setReview] = useState(item?.review || '');
   const [status, setStatus] = useState(item?.status || 'COMPLETED');
@@ -85,18 +96,41 @@ export default function AddEditScreen({ route, navigation }) {
       return;
     }
 
+    const yearInt = year ? parseInt(year) : null;
+    const runtimeInt = runtime ? parseInt(runtime) : null;
+    const pagesInt = pages ? parseInt(pages) : null;
+
+    const directorNamesArray = directorNames ? directorNames.split(',').map(d => d.trim()) : [];
+    const authorNamesArray = authorNames ? authorNames.split(',').map(a => a.trim()) : [];
+
     try {
       if (type === 'movie') {
         if (isEdit) {
-          await updateMovie({ variables: { id: item.id, genre: selectedGenres, rating: ratingInt, review: review || null, status } });
-        } else {
-          await addMovie({ variables: { title, genre: selectedGenres, rating: ratingInt, review: review || null, status } });
+          await updateMovie({ 
+            variables: { id: item.id, genre: selectedGenres, rating: ratingInt, 
+              review: review || null, status, year: yearInt, runtime: runtimeInt} 
+          });
+        } 
+        else {
+          await addMovie({ 
+            variables: { title, genre: selectedGenres, rating: ratingInt, review: review || null, status, year: yearInt,
+              runtime: runtimeInt, directorNames: directorNamesArray.length > 0 ? directorNamesArray : null} 
+          });
         }
-      } else {
+      } 
+      else {
         if (isEdit) {
-          await updateBook({ variables: { id: item.id, genre: selectedGenres, rating: ratingInt, review: review || null, status } });
-        } else {
-          await addBook({ variables: { title, genre: selectedGenres, rating: ratingInt, review: review || null, status } });
+          await updateBook({ 
+            variables: {id: item.id, genre: selectedGenres, rating: ratingInt, 
+              review: review || null, status,year: yearInt,pages: pagesInt} 
+          });
+        } 
+        else {
+          await addBook({ 
+            variables: {title, genre: selectedGenres, rating: ratingInt, review: review || null, status,
+              year: yearInt, pages: pagesInt, authorNames: authorNamesArray.length > 0 ? authorNamesArray : null
+            }
+          });
         }
       }
       navigation.goBack();
@@ -111,13 +145,13 @@ export default function AddEditScreen({ route, navigation }) {
       <Text style={styles.label}>Title *</Text>
       <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Enter title" />
 
-      <Text style={styles.label}>Genre(s)</Text>
+      <Text style={styles.label}>Genre(s) *</Text>
       <TouchableOpacity style={styles.genreSelector} onPress={() => setGenreModalVisible(true)}>
         <Text style={styles.genreSelectorText}>
           {selectedGenres.length > 0 ? selectedGenres.join(', ') : 'Select genres...'}
         </Text>
       </TouchableOpacity>
-
+      
       {selectedGenres.length > 0 && (
         <View style={styles.selectedGenresContainer}>
           {selectedGenres.map(genre => (
@@ -128,12 +162,82 @@ export default function AddEditScreen({ route, navigation }) {
         </View>
       )}
 
+      {type === 'movie' ? (
+        <>
+          <Text style={styles.label}>Director(s) (comma-separated)</Text>
+          <TextInput 
+            style={styles.input} 
+            value={directorNames} 
+            onChangeText={setDirectorNames} 
+            placeholder="e.g., Christopher Nolan, Steven Spielberg" 
+          />
+          
+          <Text style={styles.label}>Year</Text>
+          <TextInput 
+            style={styles.input} 
+            value={year} 
+            onChangeText={setYear} 
+            placeholder="e.g., 2020" 
+            keyboardType="numeric" 
+          />
+          
+          <Text style={styles.label}>Runtime (minutes)</Text>
+          <TextInput 
+            style={styles.input} 
+            value={runtime} 
+            onChangeText={setRuntime} 
+            placeholder="e.g., 148" 
+            keyboardType="numeric" 
+          />
+        </>
+      ) : (
+        <>
+          <Text style={styles.label}>Author(s) (comma-separated)</Text>
+          <TextInput 
+            style={styles.input} 
+            value={authorNames} 
+            onChangeText={setAuthorNames} 
+            placeholder="e.g., J.K. Rowling, George R.R. Martin" 
+          />
+          
+          <Text style={styles.label}>Year</Text>
+          <TextInput 
+            style={styles.input} 
+            value={year} 
+            onChangeText={setYear} 
+            placeholder="e.g., 2020" 
+            keyboardType="numeric" 
+          />
+          
+          <Text style={styles.label}>Pages</Text>
+          <TextInput 
+            style={styles.input} 
+            value={pages} 
+            onChangeText={setPages} 
+            placeholder="e.g., 328" 
+            keyboardType="numeric" 
+          />
+        </>
+      )}
 
       <Text style={styles.label}>Rating (1-10)</Text>
-      <TextInput style={styles.input} value={rating} onChangeText={setRating} placeholder="e.g., 8" keyboardType="numeric" />
+      <TextInput 
+        style={styles.input} 
+        value={rating} 
+        onChangeText={setRating} 
+        placeholder="e.g., 8" 
+        keyboardType="numeric" 
+      />
 
       <Text style={styles.label}>Review</Text>
-      <TextInput style={[styles.input, styles.textArea]} value={review} onChangeText={setReview} placeholder="Your thoughts..." multiline numberOfLines={4} />
+      <TextInput 
+        style={[styles.input, styles.textArea]} 
+        value={review} 
+        onChangeText={setReview} 
+        placeholder="Your thoughts..." 
+        multiline 
+        numberOfLines={4} 
+      />
 
       <Text style={styles.label}>Status</Text>
       <View style={styles.statusContainer}>
@@ -143,7 +247,9 @@ export default function AddEditScreen({ route, navigation }) {
             style={[styles.statusButton, status === s && styles.statusActive]} 
             onPress={() => setStatus(s)}
           >
-            <Text style={[styles.statusText, status === s && styles.statusTextActive]}>{s.replace('_', ' ')}</Text>
+            <Text style={[styles.statusText, status === s && styles.statusTextActive]}>
+              {s.replace('_', ' ')}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -156,12 +262,21 @@ export default function AddEditScreen({ route, navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Select Genres</Text>
-            <FlatList data={GENRES} keyExtractor={(item) => item} renderItem={({ item: genre }) => (
+            <FlatList 
+              data={GENRES} 
+              keyExtractor={(item) => item} 
+              renderItem={({ item: genre }) => (
                 <TouchableOpacity 
-                  style={[styles.genreOption, selectedGenres.includes(genre) && styles.genreOptionSelected]} 
+                  style={[
+                    styles.genreOption, 
+                    selectedGenres.includes(genre) && styles.genreOptionSelected
+                  ]} 
                   onPress={() => toggleGenre(genre)}
                 >
-                  <Text style={[styles.genreOptionText, selectedGenres.includes(genre) && styles.genreOptionTextSelected]}>
+                  <Text style={[
+                    styles.genreOptionText, 
+                    selectedGenres.includes(genre) && styles.genreOptionTextSelected
+                  ]}>
                     {genre}
                   </Text>
                 </TouchableOpacity>
@@ -173,11 +288,9 @@ export default function AddEditScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
-
     </ScrollView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#fff' },
@@ -206,5 +319,4 @@ const styles = StyleSheet.create({
   doneButton: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8, marginTop: 15, alignItems: 'center' },
   doneButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });
-
 
