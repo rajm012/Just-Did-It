@@ -167,3 +167,7 @@ TRUNCATE movies, books, users RESTART IDENTITY;
 
 -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
+ALTER TABLE movies ALTER COLUMN genre TYPE TEXT[];
+ALTER TABLE books ALTER COLUMN genre TYPE TEXT[];
+

@@ -3,6 +3,9 @@ type User {
   id: ID!
   username: String!
   email: String!
+  
+  favoriteMoviesByGenre(genre: String!): [Movie]
+  favoriteBooksByGenre(genre: String!): [Book]
 }
 
 input GenreInput {
@@ -45,6 +48,11 @@ type Query {
   searchBooks(term: String!): [Book]
   getFavoriteMovies: [Movie]
   getFavoriteBooks: [Book]
+
+  getMoviesByGenre(genre: String!): [Movie]
+  getBooksByGenre(genre: String!): [Book]
+  getMoviesByMultipleGenres(genres: [String!]!): [Movie]
+  getBooksByMultipleGenres(genres: [String!]!): [Book]
 }
 
 type Mutation {
