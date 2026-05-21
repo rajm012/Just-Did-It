@@ -8,30 +8,50 @@ import { GENRES } from '../App';
 
 const GET_MOVIES_BY_MULTIPLE_GENRES = gql`
   query GetMoviesByMultipleGenres($genres: [String!]!) {
-    getMoviesByMultipleGenres(genres: $genres) {
+    me{
       id
-      title
-      genre
-      rating
-      review
-      status
-      is_favorite
-      created_at
+      moviesByMultipleGenres(genres: $genres) {
+        id
+        title
+        genre
+        rating
+        review
+        status
+        is_favorite
+        year
+        runtime
+        directors {
+          id
+          name
+          country
+        }
+        created_at
+      }
     }
   }
 `;
 
 const GET_BOOKS_BY_MULTIPLE_GENRES = gql`
   query GetBooksByMultipleGenres($genres: [String!]!) {
-    getBooksByMultipleGenres(genres: $genres) {
+    me{
       id
-      title
-      genre
-      rating
-      review
-      status
-      is_favorite
-      created_at
+      booksByMultipleGenres(genres: $genres) {
+        id
+        title
+        genre
+        rating
+        review
+        status
+        is_favorite
+        year
+        pages
+        authors {
+          id
+          name
+          country
+        }
+        created_at
+      }
     }
   }
 `;
@@ -128,9 +148,9 @@ export default function GenreFilterScreen({ navigation }) {
   };
 
   const isLoading = selectedTab === 'movies' ? moviesLoading : booksLoading;
-  const currentData = selectedTab === 'movies' 
-    ? (moviesData?.getMoviesByMultipleGenres || [])
-    : (booksData?.getBooksByMultipleGenres || []);
+  const currentData = selectedTab === 'movies'
+  ? (moviesData?.me?.moviesByMultipleGenres || [])
+  : (booksData?.me?.booksByMultipleGenres || []);
 
   const renderItem = ({ item, type }) => (
     <View style={styles.card}>
@@ -146,6 +166,22 @@ export default function GenreFilterScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         <Text style={styles.genreText}>Genre: {formatGenre(item.genre)}</Text>
+        {type === 'movie' ? (
+          item.directors && item.directors.length > 0 && (
+            <Text style={styles.personText}>
+              Director: {item.directors.map(d => d.name).join(', ')}
+            </Text>
+          )
+        ) : (
+          item.authors && item.authors.length > 0 && (
+            <Text style={styles.personText}>
+              Author: {item.authors.map(a => a.name).join(', ')}
+            </Text>
+          )
+        )}
+        {item.year && <Text>Year: {item.year}</Text>}
+        {type === 'movie' && item.runtime && <Text>Runtime: {item.runtime} min</Text>}
+        {type === 'book' && item.pages && <Text>Pages: {item.pages}</Text>}
         <Text>Rating: {item.rating || 'N/A'}/10</Text>
         <Text>Status: {item.status?.replaceAll('_', ' ') || 'N/A'}</Text>
         <Text style={styles.viewHint}>Tap to view details</Text>
@@ -218,10 +254,28 @@ export default function GenreFilterScreen({ navigation }) {
       ) : currentData.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="sad-outline" size={64} color="#ccc" />
+
           <Text style={styles.emptyText}>No items found</Text>
+
           <Text style={styles.emptySubtext}>
             No {selectedTab} found with selected genres
           </Text>
+
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={() => {
+              if (selectedTab === 'movies') {
+                refetchMovies();
+              } else {
+                refetchBooks();
+              }
+            }}
+          >
+            <Ionicons name="refresh" size={20} color="#fff" />
+            <Text style={styles.refreshButtonText}>
+              Refresh
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList 
@@ -278,6 +332,62 @@ export default function GenreFilterScreen({ navigation }) {
             <ScrollView contentContainerStyle={styles.modalContent}>
               <Text style={styles.modalTitle}>{selectedItem?.title}</Text>
               <Text style={styles.modalRow}>Genre: {formatGenre(selectedItem?.genre)}</Text>
+              {selectedItem?.type === 'movie' && selectedItem?.directors && selectedItem.directors.length > 0 && (
+                <>
+                  <Text style={styles.modalRow}>Director(s):</Text>
+                  {selectedItem.directors.map((director) => (
+                    <TouchableOpacity
+                      key={director.id}
+                      style={styles.personLink}
+                      onPress={() => {
+                        setSelectedItem(null);
+                        navigation.navigate('DirectorDetail', {
+                          directorId: director.id,
+                          directorName: director.name,
+                        });
+                      }}
+                    >
+                      <Text style={styles.personLinkText}>
+                        {director.name} {director.country ? `(${director.country})` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+              {selectedItem?.type === 'book' && selectedItem?.authors && selectedItem.authors.length > 0 && (
+                <>
+                  <Text style={styles.modalRow}>Author(s):</Text>
+                  {selectedItem.authors.map((author) => (
+                    <TouchableOpacity
+                      key={author.id}
+                      style={styles.personLink}
+                      onPress={() => {
+                        setSelectedItem(null);
+                        navigation.navigate('AuthorDetail', {
+                          authorId: author.id,
+                          authorName: author.name,
+                        });
+                      }}
+                    >
+                      <Text style={styles.personLinkText}>
+                        {author.name} {author.country ? `(${author.country})` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+              {selectedItem?.type === 'movie' && selectedItem?.year && (
+                <Text style={styles.modalRow}>Year: {selectedItem.year}</Text>
+              )}
+              {selectedItem?.type === 'movie' && selectedItem?.runtime && (
+                <Text style={styles.modalRow}>Runtime: {selectedItem.runtime} minutes</Text>
+              )}
+              {selectedItem?.type === 'book' && selectedItem?.year && (
+                <Text style={styles.modalRow}>Year: {selectedItem.year}</Text>
+              )}
+              {selectedItem?.type === 'book' && selectedItem?.pages && (
+                <Text style={styles.modalRow}>Pages: {selectedItem.pages}</Text>
+              )}
               <Text style={styles.modalRow}>Rating: {selectedItem?.rating || 'N/A'}/10</Text>
               <Text style={styles.modalRow}>Status: {selectedItem?.status?.replaceAll('_', ' ') || 'N/A'}</Text>
               <Text style={styles.modalRow}>Favorite: {selectedItem?.is_favorite ? 'Yes' : 'No'}</Text>
@@ -322,6 +432,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   title: { fontSize: 18, fontWeight: 'bold', flex: 1, marginRight: 10 },
   genreText: { color: '#666', marginBottom: 5, fontSize: 14 },
+  personText: { color: '#007AFF', marginBottom: 5, fontSize: 14 },
   viewHint: { marginTop: 8, color: '#007AFF', fontSize: 12, fontWeight: '500' },
   
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
@@ -351,5 +462,10 @@ const styles = StyleSheet.create({
   modalContent: { paddingBottom: 12 },
   modalRow: { fontSize: 16, marginBottom: 10, color: '#333' },
   modalReview: { fontSize: 15, color: '#444', lineHeight: 22, marginBottom: 14, backgroundColor: '#f9f9f9', padding: 12, borderRadius: 8 },
+  personLink: { marginBottom: 8, marginLeft: 10 },
+  personLinkText: { color: '#007AFF', fontSize: 15, textDecorationLine: 'underline' },
+
+  refreshButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20, backgroundColor: '#007AFF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10},
+  refreshButtonText: { color: '#fff', marginLeft: 8, fontWeight: 'bold', fontSize: 16},
 });
 

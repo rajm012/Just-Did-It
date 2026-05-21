@@ -6,22 +6,25 @@ import { Ionicons } from '@expo/vector-icons';
 
 const GET_BOOKS = gql`
   query GetMyBooks {
-    getMyBooks {
+    me{
       id
-      title
-      genre
-      rating
-      review
-      status
-      is_favorite
-      year
-      pages
-      authors {
+      books{
         id
-        name
-        country
+        title
+        genre
+        rating
+        review
+        status
+        is_favorite
+        year
+        pages
+        authors {
+          id
+          name
+          country
+        }
+        created_at
       }
-      created_at
     }
   }
 `;
@@ -145,7 +148,7 @@ export default function BooksScreen({ navigation }) {
       </TouchableOpacity>
       
       <FlatList 
-        data={data?.getMyBooks || []} 
+        data={data?.me?.books || []} 
         renderItem={renderItem} 
         keyExtractor={(item) => item.id.toString()} 
         onRefresh={refetch} 

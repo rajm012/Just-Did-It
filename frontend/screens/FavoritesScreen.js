@@ -6,40 +6,46 @@ import { Ionicons } from '@expo/vector-icons';
 
 const GET_FAVORITE_MOVIES = gql`
   query GetFavoriteMovies {
-    getFavoriteMovies {
+     me{
       id
-      title
-      genre
-      rating
-      review
-      status
-      is_favorite
-      year
-      directors {
+      favoriteMovies{
         id
-        name
+        title
+        genre
+        rating
+        review
+        status
+        is_favorite
+        year
+        directors {
+          id
+          name
+        }
+        created_at
       }
-      created_at
     }
   }
 `;
 
 const GET_FAVORITE_BOOKS = gql`
   query GetFavoriteBooks {
-    getFavoriteBooks {
+    me {
       id
-      title
-      genre
-      rating
-      review
-      status
-      is_favorite
-      year
-      authors {
+      favoriteBooks {
         id
-        name
+        title
+        genre
+        rating
+        review
+        status
+        is_favorite
+        year
+        authors {
+          id
+          name
+        }
+        created_at
       }
-      created_at
     }
   }
 `;
@@ -143,8 +149,8 @@ export default function FavoritesScreen({ navigation }) {
 
   if (moviesLoading || booksLoading) return <Text style={styles.center}>Loading...</Text>;
 
-  const movies = moviesData?.getFavoriteMovies || [];
-  const books = booksData?.getFavoriteBooks || [];
+  const movies = moviesData?.me?.favoriteMovies || [];
+  const books = booksData?.me?.favoriteBooks || [];
 
   return (
     <View style={styles.container}>

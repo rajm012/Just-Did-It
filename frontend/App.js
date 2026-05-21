@@ -15,6 +15,8 @@ import FavoritesScreen from './screens/FavoritesScreen';
 import GenreFilterScreen from './screens/GenreFilterScreen';
 import DirectorDetailScreen from './screens/DirectorDetailScreen';
 import AuthorDetailScreen from './screens/AuthorDetailScreen';
+import ManageDirectorsScreen from './screens/ManageDirectorsScreen';
+import ManageAuthorsScreen from './screens/ManageAuthorsScreen';
 import { Ionicons } from '@expo/vector-icons';
 
 
@@ -77,6 +79,8 @@ function MainTabs() {
           else if (route.name === 'Books') iconName = 'book';
           else if (route.name === 'Favorites') iconName = focused ? 'heart' : 'heart-outline';
           else if (route.name === 'Genre Filter') iconName = focused ? 'filter' : 'filter-outline';
+          else if (route.name === 'Directors') iconName = 'people';
+          else if (route.name === 'Authors') iconName = 'bookmarks';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#007AFF',
@@ -87,6 +91,8 @@ function MainTabs() {
       <Tab.Screen name="Books" component={BooksScreen} />
       <Tab.Screen name="Favorites" component={FavoritesScreen} />
       <Tab.Screen name="Genre Filter" component={GenreFilterScreen} />
+      <Tab.Screen name="Directors" component={ManageDirectorsScreen} />
+      <Tab.Screen name="Authors" component={ManageAuthorsScreen} />
     </Tab.Navigator>
   );
 }

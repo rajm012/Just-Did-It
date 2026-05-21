@@ -6,22 +6,25 @@ import { Ionicons } from '@expo/vector-icons';
 
 const GET_MOVIES = gql`
   query GetMyMovies {
-    getMyMovies {
+    me{
       id
-      title
-      genre
-      rating
-      review
-      status
-      is_favorite
-      year
-      runtime
-      directors {
+      movies{
         id
-        name
-        country
+        title
+        genre
+        rating
+        review
+        status
+        is_favorite
+        year
+        runtime
+        directors {
+          id
+          name
+          country
+        }
+        created_at
       }
-      created_at
     }
   }
 `;
@@ -145,7 +148,7 @@ export default function MoviesScreen({ navigation }) {
       </TouchableOpacity>
       
       <FlatList 
-        data={data?.getMyMovies || []} 
+        data={data?.me?.movies || []} 
         renderItem={renderItem} 
         keyExtractor={(item) => item.id.toString()} 
         onRefresh={refetch} 
