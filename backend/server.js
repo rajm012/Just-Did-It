@@ -134,200 +134,6 @@ const resolvers = {
       return result.rows[0];
     },
     
-    getMyMovies: async (_, __, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-          WHERE user_id = $1 
-          ORDER BY created_at DESC`,
-        [user.userId]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getFavoriteMovies: async (_, __, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-          WHERE user_id = $1 AND is_favorite = true 
-          ORDER BY created_at DESC`,
-        [user.userId]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getMoviesByStatus: async (_, { status }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-          WHERE user_id = $1 AND status = $2 
-          ORDER BY created_at DESC`,
-        [user.userId, status]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getMoviesByGenre: async (_, { genre }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-          WHERE user_id = $1 AND $2 = ANY(genre) 
-          ORDER BY created_at DESC`,
-        [user.userId, genre]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getMoviesByMultipleGenres: async (_, { genres }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-          WHERE user_id = $1 AND genre && $2::text[] 
-          ORDER BY created_at DESC`,
-        [user.userId, genres]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getMoviesByDirector: async (_, { directorName }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const directorResult = await pool.query(
-        `SELECT id 
-          FROM directors 
-          WHERE name = $1`,
-        [directorName]
-      );
-      if (directorResult.rows.length === 0) return [];
-      
-      const result = await pool.query(
-        `SELECT m.* FROM movies m
-         JOIN movie_directors md ON md.movie_id = m.id
-         WHERE md.director_id = $1 AND m.user_id = $2
-         ORDER BY m.created_at DESC`,
-        [directorResult.rows[0].id, user.userId]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getMoviesByYear: async (_, { year }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-          WHERE user_id = $1 AND year = $2 
-          ORDER BY created_at DESC`,
-        [user.userId, year]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    searchMovies: async (_, { term }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-         WHERE user_id = $1 AND 
-         (title ILIKE $2 OR EXISTS 
-         (SELECT 1 FROM unnest(genre) AS g WHERE g ILIKE $2))`,
-        [user.userId, `%${term}%`]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getMyBooks: async (_, __, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM books 
-          WHERE user_id = $1 
-          ORDER BY created_at DESC`,
-        [user.userId]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getFavoriteBooks: async (_, __, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM books 
-          WHERE user_id = $1 AND is_favorite = true 
-          ORDER BY created_at DESC`,
-        [user.userId]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getBooksByStatus: async (_, { status }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM books 
-          WHERE user_id = $1 AND status = $2 
-          ORDER BY created_at DESC`,
-        [user.userId, status]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getBooksByGenre: async (_, { genre }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM books 
-          WHERE user_id = $1 AND $2 = ANY(genre) 
-          ORDER BY created_at DESC`,
-        [user.userId, genre]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getBooksByMultipleGenres: async (_, { genres }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM books 
-          WHERE user_id = $1 AND genre && $2::text[] 
-          ORDER BY created_at DESC`,
-        [user.userId, genres]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getBooksByAuthor: async (_, { authorName }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const authorResult = await pool.query(
-        'SELECT id FROM authors WHERE name = $1',
-        [authorName]
-      );
-      if (authorResult.rows.length === 0) return [];
-      
-      const result = await pool.query(
-        `SELECT b.* FROM books b
-         JOIN book_authors ba ON ba.book_id = b.id
-         WHERE ba.author_id = $1 AND b.user_id = $2
-         ORDER BY b.created_at DESC`,
-        [authorResult.rows[0].id, user.userId]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    getBooksByYear: async (_, { year }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM books 
-          WHERE user_id = $1 AND year = $2 
-          ORDER BY created_at DESC`,
-        [user.userId, year]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    searchBooks: async (_, { term }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        `SELECT * FROM books 
-         WHERE user_id = $1 AND 
-         (title ILIKE $2 OR EXISTS 
-         (SELECT 1 FROM unnest(genre) AS g WHERE g ILIKE $2))`,
-        [user.userId, `%${term}%`]
-      );
-      return normalizeRows(result.rows);
-    },
-    
     getAllDirectors: async (_, __, { user }) => {
       if (!user) throw new Error('Not authenticated');
       const result = await pool.query(
@@ -344,14 +150,6 @@ const resolvers = {
       return result.rows[0];
     },
     
-    getDirectorByName: async (_, { name }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        'SELECT * FROM directors WHERE name = $1', [name]
-      );
-      return result.rows[0];
-    },
-    
     getAllAuthors: async (_, __, { user }) => {
       if (!user) throw new Error('Not authenticated');
       const result = await pool.query(
@@ -364,14 +162,6 @@ const resolvers = {
       if (!user) throw new Error('Not authenticated');
       const result = await pool.query(
         'SELECT * FROM authors WHERE id = $1', [id]
-      );
-      return result.rows[0];
-    },
-    
-    getAuthorByName: async (_, { name }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      const result = await pool.query(
-        'SELECT * FROM authors WHERE name = $1', [name]
       );
       return result.rows[0];
     },
@@ -448,28 +238,6 @@ const resolvers = {
       return true;
     },
     
-    addMovieDirectors: async (_, { movieId, directorNames }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      
-      const movieCheck = await pool.query(
-        `SELECT id FROM movies WHERE id = $1 AND user_id = $2`,
-        [movieId, user.userId]
-      );
-      if (movieCheck.rows.length === 0) throw new Error('Movie not found');
-      
-      for (const directorName of directorNames) {
-        const director = await getOrCreateDirector(directorName);
-        await pool.query(
-          `INSERT INTO movie_directors (movie_id, director_id) 
-           VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [movieId, director.id]
-        );
-      }
-      
-      const result = await pool.query('SELECT * FROM movies WHERE id = $1', [movieId]);
-      return normalizeRow(result.rows[0]);
-    },
-    
     addBook: async (_, { title, genre, rating, review, status, year, pages, authorNames }, { user }) => {
       if (!user) throw new Error('Not authenticated');
       
@@ -520,27 +288,6 @@ const resolvers = {
       if (!user) throw new Error('Not authenticated');
       await pool.query('DELETE FROM books WHERE id = $1 AND user_id = $2', [id, user.userId]);
       return true;
-    },
-    
-    addBookAuthors: async (_, { bookId, authorNames }, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      
-      const bookCheck = await pool.query(
-        'SELECT id FROM books WHERE id = $1 AND user_id = $2',
-        [bookId, user.userId]
-      );
-      if (bookCheck.rows.length === 0) throw new Error('Book not found');
-      
-      for (const authorName of authorNames) {
-        const author = await getOrCreateAuthor(authorName);
-        await pool.query(
-          'INSERT INTO book_authors (book_id, author_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [bookId, author.id]
-        );
-      }
-      
-      const result = await pool.query('SELECT * FROM books WHERE id = $1', [bookId]);
-      return normalizeRow(result.rows[0]);
     },
     
     addDirector: async (_, { name, country, birthYear }, { user }) => {
@@ -618,28 +365,6 @@ const resolvers = {
       return normalizeRows(result.rows);
     },
     
-    moviesByStatus: async (parent, { status }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-         WHERE user_id = $1 AND status = $2 
-         ORDER BY created_at DESC`,
-        [parent.id, status]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    moviesByGenre: async (parent, { genre }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-         WHERE user_id = $1 AND $2 = ANY(genre) 
-         ORDER BY created_at DESC`,
-        [parent.id, genre]
-      );
-      return normalizeRows(result.rows);
-    },
-    
     moviesByMultipleGenres: async (parent, { genres }, { user }) => {
       if (!user || parent.id !== user.userId) throw new Error('Not authorized');
       const result = await pool.query(
@@ -647,32 +372,6 @@ const resolvers = {
          WHERE user_id = $1 AND genre && $2::text[] 
          ORDER BY created_at DESC`,
         [parent.id, genres]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    moviesByDirector: async (parent, { directorName }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const directorResult = await pool.query('SELECT id FROM directors WHERE name = $1', [directorName]);
-      if (directorResult.rows.length === 0) return [];
-      
-      const result = await pool.query(
-        `SELECT m.* FROM movies m
-         JOIN movie_directors md ON md.movie_id = m.id
-         WHERE md.director_id = $1 AND m.user_id = $2
-         ORDER BY m.created_at DESC`,
-        [directorResult.rows[0].id, parent.id]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    moviesByYear: async (parent, { year }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-         WHERE user_id = $1 AND year = $2 
-         ORDER BY created_at DESC`,
-        [parent.id, year]
       );
       return normalizeRows(result.rows);
     },
@@ -699,28 +398,6 @@ const resolvers = {
       return normalizeRows(result.rows);
     },
     
-    booksByStatus: async (parent, { status }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        `SELECT * FROM books 
-         WHERE user_id = $1 AND status = $2 
-         ORDER BY created_at DESC`,
-        [parent.id, status]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    booksByGenre: async (parent, { genre }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        `SELECT * FROM books 
-         WHERE user_id = $1 AND $2 = ANY(genre) 
-         ORDER BY created_at DESC`,
-        [parent.id, genre]
-      );
-      return normalizeRows(result.rows);
-    },
-    
     booksByMultipleGenres: async (parent, { genres }, { user }) => {
       if (!user || parent.id !== user.userId) throw new Error('Not authorized');
       const result = await pool.query(
@@ -728,87 +405,6 @@ const resolvers = {
          WHERE user_id = $1 AND genre && $2::text[] 
          ORDER BY created_at DESC`,
         [parent.id, genres]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    booksByAuthor: async (parent, { authorName }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const authorResult = await pool.query('SELECT id FROM authors WHERE name = $1', [authorName]);
-      if (authorResult.rows.length === 0) return [];
-      
-      const result = await pool.query(
-        `SELECT b.* FROM books b
-         JOIN book_authors ba ON ba.book_id = b.id
-         WHERE ba.author_id = $1 AND b.user_id = $2
-         ORDER BY b.created_at DESC`,
-        [authorResult.rows[0].id, parent.id]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    booksByYear: async (parent, { year }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        'SELECT * FROM books WHERE user_id = $1 AND year = $2 ORDER BY created_at DESC',
-        [parent.id, year]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    // deep resolvers
-    favoriteMoviesByGenre: async (parent, { genre }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        `SELECT * FROM movies 
-         WHERE user_id = $1 AND is_favorite = true AND $2 = ANY(genre) 
-         ORDER BY created_at DESC`,
-        [parent.id, genre]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    favoriteMoviesByDirector: async (parent, { directorName }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const directorResult = await pool.query(
-        `SELECT id FROM directors WHERE name = $1`, [directorName]
-      );
-      if (directorResult.rows.length === 0) return [];
-      
-      const result = await pool.query(
-        `SELECT m.* FROM movies m
-         JOIN movie_directors md ON md.movie_id = m.id
-         WHERE md.director_id = $1 AND m.user_id = $2 AND m.is_favorite = true
-         ORDER BY m.created_at DESC`,
-        [directorResult.rows[0].id, parent.id]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    favoriteBooksByGenre: async (parent, { genre }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const result = await pool.query(
-        `SELECT * FROM books 
-         WHERE user_id = $1 AND is_favorite = true AND $2 = ANY(genre) 
-         ORDER BY created_at DESC`,
-        [parent.id, genre]
-      );
-      return normalizeRows(result.rows);
-    },
-    
-    favoriteBooksByAuthor: async (parent, { authorName }, { user }) => {
-      if (!user || parent.id !== user.userId) throw new Error('Not authorized');
-      const authorResult = await pool.query(
-        `SELECT id FROM authors WHERE name = $1`, [authorName]
-      );
-      if (authorResult.rows.length === 0) return [];
-      
-      const result = await pool.query(
-        `SELECT b.* FROM books b
-         JOIN book_authors ba ON ba.book_id = b.id
-         WHERE ba.author_id = $1 AND b.user_id = $2 AND b.is_favorite = true
-         ORDER BY b.created_at DESC`,
-        [authorResult.rows[0].id, parent.id]
       );
       return normalizeRows(result.rows);
     },

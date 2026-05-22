@@ -1,60 +1,5 @@
 
 
--- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
--- ## Table Creation
-
-CREATE TABLE table_name (
-  column1_name data_type constraints,
-  column2_name data_type constraints,
-  column3_name data_type constraints,
-);
-
--- Common Data Types:
---   SERIAL - Auto-incrementing integer (for IDs)
---   INTEGER / BIGINT - Whole numbers
---   VARCHAR(n) - Variable text (max length n)
---   TEXT - Unlimited text
---   TIMESTAMP - Date and time
---   BOOLEAN - True/false
---   DECIMAL(10,2) - Exact numbers with decimals
-
--- Common Constraints:
---   PRIMARY KEY - Uniquely identifies each row
---   FOREIGN KEY - References another table
---   NOT NULL - Value required
---   UNIQUE - No duplicates allowed
---   CHECK (condition) - Validates data
---   DEFAULT value - Default if none provided
-
-
-INSERT INTO table_name (col1, col2, col3) 
-VALUES 
-  (val1, val2, val3),
-  (val4, val5, val6),
-  (val7, val8, val9);
-
-
--- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
--- transactions 
-BEGIN;
-  -- Your INSERTs here
-COMMIT;
-
-```
-can also use the ROLLBACK command to undo changes if something goes wrong:
-and also can use SAVEPOINT to create checkpoints within a transaction:
-```
-
-BEGIN;
-  -- Your first set of INSERTs here
-  SAVEPOINT first_batch;
-  -- Your second set of INSERTs here
-  -- If something goes wrong with the second batch, you can roll back to the savepoint
-  ROLLBACK TO SAVEPOINT first_batch;
-COMMIT;
-
-
 
 -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 -- ## Adding permissions
@@ -63,19 +8,15 @@ sudo -u postgres psql
 
 GRANT ALL ON SCHEMA public TO tracker_user;
 GRANT ALL PRIVILEGES ON DATABASE tracker_db TO tracker_user;
-
 ALTER DATABASE tracker_db OWNER TO tracker_user;
 
 -- \q
 -- psql -d tracker_db -U tracker_user -h localhost -W
+-- psql -d tracker_db -U tracker_user
 -- \dt
 
 -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
--- ## Database Schema Design
 
--- psql -d tracker_db -U tracker_user
-
--- Users table
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(100) UNIQUE NOT NULL,
@@ -84,55 +25,33 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Movies table (belongs to user)
 CREATE TABLE movies (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
-  genre VARCHAR(100),
+  genre TEXT[],
   rating INTEGER CHECK (rating >= 1 AND rating <= 10),
   review TEXT,
+  year INTEGER,
+  runtime INTEGER,
   status VARCHAR(50) CHECK (status IN ('WATCHING', 'COMPLETED', 'PLAN_TO_WATCH', 'DROPPED')),
   is_favorite BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Books table (belongs to user)
 CREATE TABLE books (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
-  genre VARCHAR(100),
+  genre TEXT[],
   rating INTEGER CHECK (rating >= 1 AND rating <= 10),
   review TEXT,
+  year INTEGER,
+  runtime INTEGER,
   status VARCHAR(50) CHECK (status IN ('READING', 'COMPLETED', 'PLAN_TO_READ', 'DROPPED')),
   is_favorite BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-
--- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
--- -- ## Quick Commands Reference
-
--- sudo -u postgres psql
--- psql -h localhost -d tracker_db -U tracker_user
--- psql -d tracker_db -U tracker_user
--- \dt
--- \d movies
-
--- ## Delete all data (careful!)
-TRUNCATE movies, books, users RESTART IDENTITY;
-
-
--- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-ALTER TABLE movies ALTER COLUMN genre TYPE TEXT[];
-ALTER TABLE books ALTER COLUMN genre TYPE TEXT[];
-
-
--- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 
 CREATE TABLE directors (
   id SERIAL PRIMARY KEY,
@@ -150,24 +69,17 @@ CREATE TABLE authors (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-ALTER TABLE movies ADD COLUMN year INTEGER, ADD COLUMN runtime INTEGER;
-ALTER TABLE books ADD COLUMN year INTEGER, ADD COLUMN pages INTEGER;
-
-
 CREATE TABLE movie_directors (
   movie_id INTEGER REFERENCES movies(id) ON DELETE CASCADE,
   director_id INTEGER REFERENCES directors(id) ON DELETE CASCADE,
   PRIMARY KEY (movie_id, director_id)
 );
 
-
 CREATE TABLE book_authors (
   book_id INTEGER REFERENCES books(id) ON DELETE CASCADE,
   author_id INTEGER REFERENCES authors(id) ON DELETE CASCADE,
   PRIMARY KEY (book_id, author_id)
 );
-
 
 CREATE INDEX idx_movie_directors_movie_id ON movie_directors(movie_id);
 CREATE INDEX idx_movie_directors_director_id ON movie_directors(director_id);
@@ -176,12 +88,12 @@ CREATE INDEX idx_book_authors_author_id ON book_authors(author_id);
 CREATE INDEX idx_movies_user_id ON movies(user_id);
 CREATE INDEX idx_books_user_id ON books(user_id);
 
--- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 INSERT INTO users (username, email, password_hash, created_at) VALUES
 ('raj', 'raj@mail.com', 'this', NOW()),
 ('yei', 'yeichen@mail.com', 'this', NOW()),
 ('yoi', 'yoiban@mail.com', 'this', NOW());
+
 
 INSERT INTO directors (name, country, birth_year, created_at) VALUES
 ('Christopher Nolan', 'United Kingdom', 1970, NOW()),
@@ -201,7 +113,6 @@ INSERT INTO directors (name, country, birth_year, created_at) VALUES
 ('Wes Anderson', 'United States', 1969, NOW()),
 ('Vineeth Sreenivasan', 'India', 1984, NOW()),
 ('Dijo Jose Antony', 'India', 1988, NOW());
-
 
 
 INSERT INTO authors (name, country, birth_year, created_at) VALUES
@@ -239,7 +150,6 @@ INSERT INTO movies (user_id, title, genre, rating, review, status, is_favorite, 
 (3, 'Goodfellas', ARRAY['Biography', 'Crime', 'Drama'], 10, 'Scorsese at his peak.', 'COMPLETED', true, 1990, 145, NOW()),
 (3, 'The Matrix', ARRAY['Action', 'Sci-Fi'], 9, 'Revolutionary for its time.', 'COMPLETED', true, 1999, 136, NOW()),
 (3, 'Jana Gana Mana', ARRAY['Crime', 'Thriller'], 9, 'A gripping thriller.', 'COMPLETED', true, 2022, 180, NOW());
-
 
 
 INSERT INTO books (user_id, title, genre, rating, review, status, is_favorite, year, pages, created_at) VALUES

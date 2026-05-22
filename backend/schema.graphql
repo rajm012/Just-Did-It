@@ -1,9 +1,4 @@
 
-"""
-Making changes to whole struct to use the multiple resolvers for same stuffs like movies and books,
-"""
-
-
 type User {
   id: ID!
   username: String!
@@ -12,26 +7,12 @@ type User {
   # movie: RC
   movies: [Movie]
   favoriteMovies: [Movie]
-  moviesByStatus(status: String!): [Movie]
-  moviesByGenre(genre: String!): [Movie]
   moviesByMultipleGenres(genres: [String!]!): [Movie]
-  moviesByDirector(directorName: String!): [Movie]
-  moviesByYear(year: Int!): [Movie]
   
   # book: RC
   books: [Book]
   favoriteBooks: [Book]
-  booksByStatus(status: String!): [Book]
-  booksByGenre(genre: String!): [Book]
   booksByMultipleGenres(genres: [String!]!): [Book]
-  booksByAuthor(authorName: String!): [Book]
-  booksByYear(year: Int!): [Book]
-  
-  # Filters
-  favoriteMoviesByGenre(genre: String!): [Movie]
-  favoriteMoviesByDirector(directorName: String!): [Movie]
-  favoriteBooksByGenre(genre: String!): [Book]
-  favoriteBooksByAuthor(authorName: String!): [Book]
 }
 
 
@@ -97,33 +78,11 @@ type Query {
   me: User
   getUser(id: ID!): User
   
-  # Movie queries
-  getMyMovies: [Movie]
-  getFavoriteMovies: [Movie]
-  getMoviesByStatus(status: String!): [Movie]
-  getMoviesByGenre(genre: String!): [Movie]
-  getMoviesByMultipleGenres(genres: [String!]!): [Movie]
-  getMoviesByDirector(directorName: String!): [Movie]
-  getMoviesByYear(year: Int!): [Movie]
-  searchMovies(term: String!): [Movie]
-  
-  # Book queries
-  getMyBooks: [Book]
-  getFavoriteBooks: [Book]
-  getBooksByStatus(status: String!): [Book]
-  getBooksByGenre(genre: String!): [Book]
-  getBooksByMultipleGenres(genres: [String!]!): [Book]
-  getBooksByAuthor(authorName: String!): [Book]
-  getBooksByYear(year: Int!): [Book]
-  searchBooks(term: String!): [Book]
-  
   # Dir-Auth queries
   getAllDirectors: [Director]
   getDirector(id: ID!): Director
-  getDirectorByName(name: String!): Director
   getAllAuthors: [Author]
   getAuthor(id: ID!): Author
-  getAuthorByName(name: String!): Author
 }
 
 
@@ -140,7 +99,6 @@ type Mutation {
               year: Int, runtime: Int): Movie
   
   deleteMovie(id: ID!): Boolean
-  addMovieDirectors(movieId: ID!, directorNames: [String!]!): Movie
   
   addBook(title: String!, genre: [String!]!, rating: Int, 
           review: String, status: String!, year: Int,
@@ -151,8 +109,7 @@ type Mutation {
               year: Int, pages: Int): Book
   
   deleteBook(id: ID!): Boolean
-  addBookAuthors(bookId: ID!, authorNames: [String!]!): Book
-  
+
   addDirector(name: String!, country: String, birthYear: Int): Director
   updateDirector(id: ID!, name: String, country: String, birthYear: Int): Director
   deleteDirector(id: ID!): Boolean

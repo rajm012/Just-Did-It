@@ -36,65 +36,107 @@ In general, for the whole app we have used the Javascript (JS) as a programming 
 
 
 ## System Design
+The application follows a server-client architecture using React Native, GraphQL (Apollo) and PostgreSQL.
+
+### Architecture Flow
+View the image in the file [!Preview/Arch.png].
 
 ### Data Flow
-- User interacts with Native UI
-- Client send query-mutation to backend
-- Server receives requests
-- Validate that it's legitimate call
-- Fxns execute the SQL queries
-- DB returns the data
-- Response is sent back
-- Client now update the UI data
+- User interacts with React Native UI
+- Apollo Client sends GraphQL Query / Mutation
+- Apollo Server receives request
+- JWT authentication & request validation
+- Resolvers execute business logic
+- SQL queries run on PostgreSQL
+- Database returns requested data
+- GraphQL sends response to client
+- Apollo updates cache and UI refreshes
 
 
 ## DB Design
-
-As I knew that I have to make this stuff in a limited timeframe so I do not have to add all the features so i selected which features to keep with a proper reason that why it should be there, so now I have the idea if what to make and this makes us clear of which datas I have to store and why (minimal storage).
-
+We started our app with Users, Movies, Books and then expanded it to the Authors and Directors too, below are the more info regarding the same.
 
 ### Table Definitions
-
-Below is the basic DB structure:
+Below is the complete DB schema being used:
 
 ```sql
-CREATE TABLE users (
-  id, username,
-  mail, password,
-);
 
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE movies (
-  id, user_id,
-  title, genre,
-  rating, review, status,
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  genre TEXT[],
+  rating INTEGER CHECK (rating >= 1 AND rating <= 10),
+  review TEXT,
+  year INTEGER,
+  runtime INTEGER,
+  status VARCHAR(50) CHECK (status IN ('WATCHING', 'COMPLETED', 'PLAN_TO_WATCH', 'DROPPED')),
+  is_favorite BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE books (
-  id, user_id,
-  title, genre,
-  rating, review, status,
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  genre TEXT[],
+  rating INTEGER CHECK (rating >= 1 AND rating <= 10),
+  review TEXT,
+  year INTEGER,
+  runtime INTEGER,
+  status VARCHAR(50) CHECK (status IN ('READING', 'COMPLETED', 'PLAN_TO_READ', 'DROPPED')),
+  is_favorite BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-```
 
-As my app involves users who will be stories their data related to books and tables with basic CRUD ops, so these simple tables will do the work.
+CREATE TABLE directors (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
+  country VARCHAR(100),
+  birth_year INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE authors (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
+  country VARCHAR(100),
+  birth_year INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE movie_directors (
+  movie_id INTEGER REFERENCES movies(id) ON DELETE CASCADE,
+  director_id INTEGER REFERENCES directors(id) ON DELETE CASCADE,
+  PRIMARY KEY (movie_id, director_id)
+);
+
+CREATE TABLE book_authors (
+  book_id INTEGER REFERENCES books(id) ON DELETE CASCADE,
+  author_id INTEGER REFERENCES authors(id) ON DELETE CASCADE,
+  PRIMARY KEY (book_id, author_id)
+);
+
+CREATE INDEX idx_movie_directors_movie_id ON movie_directors(movie_id);
+CREATE INDEX idx_movie_directors_director_id ON movie_directors(director_id);
+CREATE INDEX idx_book_authors_book_id ON book_authors(book_id);
+CREATE INDEX idx_book_authors_author_id ON book_authors(author_id);
+CREATE INDEX idx_movies_user_id ON movies(user_id);
+CREATE INDEX idx_books_user_id ON books(user_id);
+
+```
 
 
 ### ER Diagram
-
-
-            |--- [Movies]
-[Users] ----|
-            |--- [Books]
-
-
-
-Users -> Movies [One to many]
-Users -> Books  [One to many]
-
-Users -> Movies [PK: id, FK: userID]
-Users -> Books  [PK: id, FK: userID]
+Visit the file [!Previews/Schema.png]
 
 
 ## Environment & Setup
@@ -122,6 +164,7 @@ GRANT ALL PRIVILEGES ON DATABASE tracker_db TO tecker_user;
 
 psql -d tracker_db -U tracker_user -h localhost -W
 # Now feed the postgresql cmds from above for tables+seeds
+# use the code in the file Schema.sql
 ```
 
 
@@ -152,7 +195,7 @@ Using Expo-go and react-native
 
 - Configure API host in `frontend/App.js` means update `MYIP` of the machine/IP where the backend runs.
 
-- Install and run
+- Install and run below code:
 ```bash
 npx create-expo-app frontend --template blank
 cd frontend
@@ -210,6 +253,9 @@ frontend/
 *(Visit these files to see the implementation details and much more.)*
 
 
+## Previews
+Visit the folder Previews to view the app visuals
+
 ## References
 
 - [React Native](https://reactnative.dev/docs/getting-started)
@@ -224,8 +270,9 @@ frontend/
 - All the basic codes-snippets-fxns were written by me but to make error free and more professional, used some LLMs to format (not to write full code, just for formatting the unstructured code).
 
 
-## Issues
+## Learnings
 - Always connect your laptop and mobile on the same WI-Fi Network to connect it efficiently
-- We are using the `IP` in `frontend` to connect to backend, so whenever you disconnect from your Wi-Fi then your again need to find your IP
-- Resolvers return `created_at` as ISO strings via `normalizeRow` in `backend`
+- We are using the IP in frontend to connect to backend, so whenever you disconnect from your Wi-Fi then your again need to find your IP
+- Resolvers return created_at as ISO strings via normalizeRow in backend
+
 
